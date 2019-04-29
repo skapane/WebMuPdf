@@ -49,33 +49,29 @@ $ /pathtoproject/server.py
 ## Using the API :
 
 ### Parameters : 
-Calling `server.py --help` shows you all the variable you can choose : 
-
-```bash
-$ python ./projects/WebMuPdf/server.py --help
-usage: server.py [-h] [--host HOST] [--port PORT] [--mono-thread] [--list]
-
-an API using PyMuPdf to turn a pdf into images
-
-optional arguments:
-  -h, --help     show this help message and exit
-  --host HOST    host of the API (default localhost)
-  --port PORT    port of the API (default 5000)
-  --mono-thread  Force the use of 1 thread only.
-  --list         return the supported file types.
-
-```
+The are contained in `default.conf`, where can be changed the host, the port and whether to use multihreading or not.
 
 ### Calling the api : 
 
-Use HTTP `POST` on the following route, while passing the binary of the file to process in the body.
+Use HTTP `GET` on the following route, while passing the binary of the file to process in the body.
 
 ```
-http://host:port/toArray/?type=pdf&width=4096
-
+GET :
+http://host:port/numpyarray/?type=pdf&width=4096
+# transform a whole document into a list of numpy arrays
 # type : the type of the doc you send (default : pdf),
 # width : the width in pixel you want the output array to be (default is 2048)
 # The height of the output file is made so that the output keeps the same format as the original file.
+
+GET:
+http://host:port/numpyarray/?type=pdf&width=4096/:PageNumber/options
+# transform one page into a numpy array
+# options are the same as above
+
+GET:
+http://host:port/pagecount/options
+# returns the number of pages in that document
+
 ```
 
 The API returns a pickle object. To use the API in an other software piece : 
@@ -106,4 +102,3 @@ $ ./pathtoprojects/server.py --list
 ['pdf', 'xps', 'oxps', 'epub', 'cbz', 'fb2', 'jpeg', 'bmp', 'jxr', 'jpx', 'gif', 'tiff', 'png', 'pnm', 'pgm', 'pbm', 'ppm', 'pam', 'tga']
 
 ```
-# WebMuPdf

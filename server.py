@@ -1,14 +1,15 @@
 #! /usr/bin/python
 # encoding : utf-8
-import argparse
+import ConfigParser
 import pickle
 
-from flask import Flask, request, make_response, jsonify
-
 from converter import get_pages, get_page, page_count, SUPPORTED_FORMAT
+from flask import Flask, request, make_response, jsonify
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
+
+conf = ConfigParser.ConfigParser()
 
 
 class InvalidUsage(Exception):
@@ -86,12 +87,9 @@ def get_types():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='an API using PyMuPdf to turn a pdf into images')
-    parser.add_argument("--host", help="host of the API (default localhost)", type=str, default='localhost')
-    parser.add_argument("--port", help="port of the API (default 5000)", type=int, default=5000)
-    parser.add_argument("--mono-thread",
-                        help="Force flask to use of 1 thread only.",
-                        action='store_true',
-                        default=False)
-    args = parser.parse_args()
-    app.run(host=args.host, port=args.port, threaded=args.mono_thread)
+    conf.read('./default.conf')
+    app.run(
+        host=conf.get('api', 'host'),
+        port=conf.getint('api', 'port'),
+        threaded=conf.getboolean('api', 'mono_thread')
+    )
