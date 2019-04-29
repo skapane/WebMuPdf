@@ -106,3 +106,4 @@ $ ./pathtoprojects/server.py --list
 ['pdf', 'xps', 'oxps', 'epub', 'cbz', 'fb2', 'jpeg', 'bmp', 'jxr', 'jpx', 'gif', 'tiff', 'png', 'pnm', 'pgm', 'pbm', 'ppm', 'pam', 'tga']
 
 ```
+# WebMuPdf
