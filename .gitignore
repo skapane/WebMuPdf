@@ -3,3 +3,9 @@ __pycache__/
 venv*/
 py-files\.zip
 *.pyc
+/build
+/dist
+/web_mu_pkg.egg-info
+
+__init__.py
+setup.py
