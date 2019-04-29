@@ -91,8 +91,8 @@ extension = os.path.basename(FILEPATH).split('.')[-1]
 with open(FILEPATH, 'rb') as f:
     bin = f.read()
 
-r = requests.post(
-    "http://127.0.0.1:5000/toArray/?type={}&width={}".format(extension, WIDTH_IN_PIXEL),
+r = requests.get(
+    "http://127.0.0.1:5000/numpyarray/?type={}&width={}".format(extension, WIDTH_IN_PIXEL),
     data=bin
 )
 
