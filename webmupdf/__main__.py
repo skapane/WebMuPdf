@@ -20,16 +20,15 @@ elif os.path.exists(os.path.join(sys.prefix, 'local', FOLDER_DATA, 'webmupdf.con
     print('loading conf from {}'.format(path))
     conf.read(path)
 
+elif os.path.exists(os.path.join(site.USER_BASE, FOLDER_DATA, 'webmupdf.conf')):
+    path = os.path.join(site.USER_BASE, FOLDER_DATA, 'webmupdf.conf')
+    print('loading conf from {}'.format(path))
+    conf.read(path)
 else:
-    try:
-        path = os.path.join(site.USER_BASE, FOLDER_DATA, 'webmupdf.conf')
-        print('loading conf from {}'.format(path))
-        conf.read(path)
-    except ConfigParser.NoSectionError:
-        raise IOError("webmupdf.conf not found")
+    raise IOError("webmupdf.conf not found")
 
 app.run(
     host=conf.get('api', 'host'),
     port=conf.getint('api', 'port'),
-    threaded=conf.getboolean('api', 'mono_thread')
+    threaded=True,
 )

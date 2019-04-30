@@ -1,7 +1,5 @@
 import setuptools
-import sys
 
-print sys.prefix
 FOLDER_DATA = './share'
 
 with open("README.md", "r") as fh:
@@ -9,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="webmupdf",
-    version="0.0.2",
+    version="0.0.3",
     author="Nathan Malnoury",
     author_email="nmalnoury@skapane.com",
     description="A web service for PyMuPDF",
