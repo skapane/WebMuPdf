@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# encoding : utf-8
 import ConfigParser
 import os
 import site
@@ -13,7 +15,7 @@ if os.path.exists(os.path.join(sys.prefix, FOLDER_DATA, 'webmupdf.conf')):
     print('loading conf from {}'.format(path))
     conf.read(path)
 
-elif os.path.exists(os.path.join(sys.prefix, 'local ', FOLDER_DATA, 'webmupdf.conf')):
+elif os.path.exists(os.path.join(sys.prefix, 'local', FOLDER_DATA, 'webmupdf.conf')):
     path = os.path.join(sys.prefix, 'local', FOLDER_DATA, 'webmupdf.conf')
     print('loading conf from {}'.format(path))
     conf.read(path)

@@ -1,6 +1,8 @@
 import setuptools
+import sys
 
-FOLDER_DATA = 'share'
+print sys.prefix
+FOLDER_DATA = './share'
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
