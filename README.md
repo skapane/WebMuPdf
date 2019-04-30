@@ -153,6 +153,7 @@ This conf should look like the following (with apache 2.4):
     </Directory>
 </VirtualHost>
 ```
+for those installing with pip, webmupdf.wsgi should be in ~/.local/share/
 
 ### Step 3 : Enabling the mod & conf :
 
