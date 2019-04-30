@@ -123,3 +123,46 @@ They are accessible by running the following route :
 ['pdf', 'xps', 'oxps', 'epub', 'cbz', 'fb2', 'jpeg', 'bmp', 'jxr', 'jpx', 'gif', 'tiff', 'png', 'pnm', 'pgm', 'pbm', 'ppm', 'pam', 'tga']
 
 ```
+
+## Run as a WSGI server :
+
+### Step 1 : install apache2 & mod-wsgi : 
+
+```bash
+$ sudo apt-get install apache2 libapache2-mod-wsgi
+```
+
+### Step 2 : creating the conf for the application:
+
+```bash
+$ cd /etc/apache2/sites-avaibles
+$ touch webmupdf.conf
+```
+This conf should look like the following (with apache 2.4): 
+```bash
+<VirtualHost *:80>
+    ServerName test-flask.com
+
+    WSGIDaemonProcess webmupdf user=<Username> threads=4
+    WSGIScriptAlias / /path/to/project/webmupdf/webmupdf.wsgi
+
+    <Directory /path/to/project/webmupdf/>
+        WSGIProcessGroup webmupdf
+        WSGIApplicationGroup %{GLOBAL}
+        Require all granted
+    </Directory>
+</VirtualHost>
+```
+
+### Step 3 : Enabling the mod & conf :
+
+```bash
+$ sudo a2enmod wsgi
+$ sudo a2ensite webmupdf.conf
+$ sudo systemctl restart apache2
+```
+
+To check if everything's all right, look at the status :
+```bash
+$ sudo systemctl status apache2
+```
