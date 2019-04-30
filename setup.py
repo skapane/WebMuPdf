@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="webmupdf",
-    version="0.0.1",
+    version="0.0.2",
     author="Nathan Malnoury",
     author_email="nmalnoury@skapane.com",
     description="A web service for PyMuPDF",
@@ -19,11 +19,7 @@ setuptools.setup(
     packages=['webmupdf'],
     include_package_data=True,
     install_requires=[
-        "click==7.0",
         "flask==1.0.2",
-        "itsdangerous==1.1.0",
-        "jinja2==2.10.1",
-        "markupsafe==1.1.1",
         "numpy==1.16.2",
         "pillow==5.3.0",
         "pymupdf==1.14.13",
