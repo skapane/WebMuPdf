@@ -6,18 +6,36 @@ first implementation converts any supported file into a numpy array.
 
 **This project license is GNU GPL v3** (PyMuPDF is distributed under GNU GPL V3. MuPDF is distributed under the GNU AFFERO GPL V3.)
 
-## Installation :
+## Installation as a package :
+### Step 1 : Clone project
+```bash
+$ git clone https://github.com/skapane/WebMuPdf.git
+```
+
+### Step 2 : installing as a package
+```bash
+$ pip install /path/toproject/ --user
+```
+
+Please note that a configuration file is created in either /usr/local or ~/.local.
+### Step 3 : running the server :
+```bash
+$ python -m webmupdf
+```
+
+
+## Installation as a script:
 
 Developed for python 2.7, this code should also run smoothly with python 3.7.
 
 ### Step 1 : Clone project
 ```bash
-$ git clone ...
+$ git clone https://github.com/skapane/WebMuPdf.git
 ```
 
 ### Step 2: Install requirements :
 ```bash
-$ cd yourpath/WebMuPdf
+$ cd yourpath/webmupdf
 $ pip install -r requirements.txt
 ```
 
@@ -72,6 +90,9 @@ GET:
 http://host:port/pagecount/options
 # returns the number of pages in that document
 
+GET:
+http://host:port/
+# returns the supported types of this api
 ```
 
 The API returns a pickle object. To use the API in an other software piece : 
@@ -96,9 +117,9 @@ arr = pickle.loads(r.content)
 ```
 
 ## Supported files :
-They are accessible by running the following command : 
+They are accessible by running the following route : 
 ```bash
-$ ./pathtoprojects/server.py --list
+ Get http://127.0.0.1:5000/
 ['pdf', 'xps', 'oxps', 'epub', 'cbz', 'fb2', 'jpeg', 'bmp', 'jxr', 'jpx', 'gif', 'tiff', 'png', 'pnm', 'pgm', 'pbm', 'ppm', 'pam', 'tga']
 
 ```

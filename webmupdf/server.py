@@ -3,13 +3,10 @@
 import ConfigParser
 import pickle
 
+from flask import request, make_response, jsonify
+
 from converter import get_pages, get_page, page_count, SUPPORTED_FORMAT
-from flask import Flask, request, make_response, jsonify
-
-app = Flask(__name__)
-app.url_map.strict_slashes = False
-
-conf = ConfigParser.ConfigParser()
+from webmupdf import app
 
 
 class InvalidUsage(Exception):
@@ -84,12 +81,3 @@ def document_to_array():
 @app.route("/", methods=["GET"])
 def get_types():
     return jsonify({'supported_formats': SUPPORTED_FORMAT})
-
-
-if __name__ == '__main__':
-    conf.read('./default.conf')
-    app.run(
-        host=conf.get('api', 'host'),
-        port=conf.getint('api', 'port'),
-        threaded=conf.getboolean('api', 'mono_thread')
-    )
