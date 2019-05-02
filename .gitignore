@@ -3,6 +3,7 @@ __pycache__/
 venv*/
 py-files\.zip
 *.pyc
+*.pyo
 /build
 /dist
 webmupdf.egg-info/
