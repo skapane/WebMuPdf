@@ -1,1 +1,1 @@
-from webmupdf import app as application
+from webmupdf.server import app as application

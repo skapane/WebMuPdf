@@ -18,11 +18,17 @@ $ pip install /path/toproject/ --user
 ```
 
 Please note that a configuration file is created in either /usr/local or ~/.local.
-### Step 3 : running the server :
+### Step 3 : running the lib:
+As a server : 
 ```bash
-$ python -m webmupdf
+$ python -m webmupdf.server
 ```
-
+As a cli call:
+```bash
+$ python -m webmupdf.cli 
+```
+In this configuration, options are given in the command (you can see them by --help)
+The binary is expected in the stdin.
 
 ## Installation as a script:
 
