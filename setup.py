@@ -2,16 +2,12 @@ import setuptools
 
 FOLDER_DATA = './share'
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
 setuptools.setup(
     name="webmupdf",
-    version="0.0.1",
+    version="0.0.3",
     author="Nathan Malnoury",
     author_email="nmalnoury@skapane.com",
     description="A web service for PyMuPDF",
-    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/skapane/WebMuPdf",
     packages=['webmupdf'],

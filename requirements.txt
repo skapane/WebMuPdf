@@ -2,4 +2,3 @@ Flask==1.0.2
 numpy==1.16.2
 Pillow==5.3.0
 PyMuPDF==1.14.13
-Werkzeug==0.15.2

@@ -15,7 +15,8 @@ def page_count(fitz_doc, filetype):
 def process_one_page(fitz_doc, page_num, width_output_file):
     fitz_page = fitz_doc.loadPage(page_num)
     shape = tuple([s for s in fitz_page.MediaBox[-2:]])
-    zoom_ratio = width_output_file / shape[0] if width_output_file else 2048 / shape[0]
+    width, height = min(shape), max(shape)
+    zoom_ratio = width_output_file / width if width_output_file else 2048 / width
 
     pm = fitz_page.getPixmap(alpha=False, matrix=fitz.Matrix(zoom_ratio, zoom_ratio))
     shape = tuple([int(s) for s in pm.irect[-2:]])
