@@ -4,7 +4,7 @@ FOLDER_DATA = './share'
 
 setuptools.setup(
     name="webmupdf",
-    version="0.0.3",
+    version="0.1.0",
     author="Nathan Malnoury",
     author_email="nmalnoury@skapane.com",
     description="A web service for PyMuPDF",
@@ -17,7 +17,6 @@ setuptools.setup(
         "numpy==1.16.2",
         "pillow==5.3.0",
         "pymupdf==1.14.13",
-        "werkzeug==0.15.2",
     ],
     data_files=[(FOLDER_DATA, ['./webmupdf.conf', './webmupdf.wsgi'])],
     classifiers=[

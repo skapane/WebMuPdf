@@ -4,6 +4,8 @@ import PIL.Image as pilimage
 import fitz
 import numpy as np
 
+from webmupdf.kernel import ConvertedPage
+
 SUPPORTED_FORMAT = ['pdf', 'xps', 'oxps', 'epub', 'cbz', 'fb2', 'jpeg', 'bmp', 'jxr', 'jpx', 'gif', 'tiff', 'png',
                     'pnm', 'pgm', 'pbm', 'ppm', 'pam', 'tga', ]
 
@@ -12,8 +14,7 @@ def page_count(fitz_doc, filetype):
     return fitz.Document(stream=fitz_doc, filetype=filetype).pageCount
 
 
-def process_one_page(fitz_doc, page_num, width_output_file):
-    fitz_page = fitz_doc.loadPage(page_num)
+def render_page(fitz_page, width_output_file):
     shape = tuple([s for s in fitz_page.MediaBox[-2:]])
     width, height = min(shape), max(shape)
     zoom_ratio = width_output_file / width if width_output_file else 2048 / width
@@ -36,13 +37,39 @@ def get_pages(file_bin, file_type, width_output_file):
     doc = fitz.Document(stream=file_bin, filetype=file_type)
     list_of_np_img = []
     for page_num in range(doc.pageCount):
-        list_of_np_img.append(process_one_page(fitz_doc=doc, page_num=page_num, width_output_file=width_output_file))
+        page = doc.loadPage(page_num)
+        list_of_np_img.append(render_page(fitz_page=page, width_output_file=width_output_file))
     return list_of_np_img
 
 
 def get_page(file_bin, page_num, file_type, width_output_file):
-    return process_one_page(
-        fitz_doc=fitz.Document(stream=file_bin, filetype=file_type),
-        page_num=page_num,
+    """
+    :return: A converted page containing the render and text data
+    """
+    doc = fitz.Document(stream=file_bin, filetype=file_type)
+    page = doc.loadPage(page_num)
+
+    data = []
+
+    dicts = page.getText("dict")
+    for bbox in dicts["blocks"]:
+        if bbox.has_key("lines"):
+            for subbbox in bbox["lines"]:
+                if subbbox.has_key("spans"):
+                    myspan = []
+                    for spans in subbbox["spans"]:
+                        txt = spans.get("text", u"").strip()
+                        if txt:
+                            myspan.append(spans)
+                    if myspan:
+                        subbbox["spans"] = myspan
+                        data.append(subbbox)
+
+    dicts["blocks"] = data
+    
+    np_array = render_page(
+        fitz_page=page,
         width_output_file=width_output_file
     )
+
+    return ConvertedPage(np_array, dicts)
