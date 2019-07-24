@@ -5,6 +5,7 @@ import pickle
 import sys
 
 import webmupdf.converter as converter
+from webmupdf.kernel import ConvertedPage
 
 if __name__ == '__main__':
 
@@ -22,7 +23,14 @@ if __name__ == '__main__':
 
     elif args.page != -1:
         # user sent a page to be converted
+        converted_page = converter.get_page(
+            file_bin=file_binary,
+            file_type=args.type,
+            page_num=args.page,
+            width_output_file=args.width
+        )
+
         sys.stdout.write(pickle.dumps(
-            converter.get_page(file_bin=file_binary, file_type=args.type, page_num=args.page, width_output_file=args.width),
+            converted_page,
             pickle.HIGHEST_PROTOCOL
         ))

@@ -51,16 +51,17 @@ def get_page(file_bin, page_num, file_type, width_output_file):
 
     data = []
 
-    dicts = page.getText("dict")
+    dicts = page.getText("rawdict")
     for bbox in dicts["blocks"]:
         if bbox.has_key("lines"):
             for subbbox in bbox["lines"]:
                 if subbbox.has_key("spans"):
                     myspan = []
-                    for spans in subbbox["spans"]:
-                        txt = spans.get("text", u"").strip()
-                        if txt:
-                            myspan.append(spans)
+                    for span in subbbox["spans"]:
+                        l_chars = span.get("chars")
+                        if l_chars is not None:
+                            if len(l_chars) > 1 or l_chars[0]["c"].strip():
+                                myspan.append(span)
                     if myspan:
                         subbbox["spans"] = myspan
                         data.append(subbbox)
