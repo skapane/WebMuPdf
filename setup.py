@@ -16,7 +16,7 @@ setuptools.setup(
         "flask==1.0.2",
         "numpy==1.16.2",
         "pillow==5.3.0",
-        "pymupdf==1.14.13",
+        "pymupdf~=1.14",
     ],
     data_files=[(FOLDER_DATA, ['./webmupdf.conf', './webmupdf.wsgi'])],
     classifiers=[
