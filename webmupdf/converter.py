@@ -14,10 +14,8 @@ def page_count(fitz_doc, filetype):
     return fitz.Document(stream=fitz_doc, filetype=filetype).pageCount
 
 
-def render_page(fitz_page, width_output_file):
-    shape = tuple([s for s in fitz_page.MediaBox[-2:]])
-    width, height = min(shape), max(shape)
-    zoom_ratio = width_output_file / width if width_output_file else 2048 / width
+def render_page(smallest_side, fitz_page, width_output_file):
+    zoom_ratio = width_output_file / smallest_side if width_output_file else 2048 / smallest_side
 
     pm = fitz_page.getPixmap(alpha=False, matrix=fitz.Matrix(zoom_ratio, zoom_ratio))
     shape = tuple([int(s) for s in pm.irect[-2:]])
@@ -49,28 +47,63 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     doc = fitz.Document(stream=file_bin, filetype=file_type)
     page = doc.loadPage(page_num)
 
-    data = []
+    # Use page object to get page height and width
+    page_height = page.MediaBoxSize.y
+    page_width = page.MediaBoxSize.x
+    page_area = page_height * page_width
 
-    dicts = page.getText("rawdict")
-    for bbox in dicts["blocks"]:
-        if bbox.has_key("lines"):
-            for subbbox in bbox["lines"]:
-                if subbbox.has_key("spans"):
-                    myspan = []
-                    for span in subbbox["spans"]:
-                        l_chars = span.get("chars")
-                        if l_chars is not None:
-                            if len(l_chars) > 1 or l_chars[0]["c"].strip():
-                                myspan.append(span)
-                    if myspan:
-                        subbbox["spans"] = myspan
-                        data.append(subbbox)
+    shape = tuple([s for s in page.MediaBox[-2:]])
+    smallest_side = min(shape)
 
-    dicts["blocks"] = data
-    
+    # Get blocks with image bboxes only (no actual image is loaded)
+    blocks = page.getText('BLOCKS', 7)
+
+    # Check if images represent a big portion of the page's area
+    # Also check that there is text in the block level data
+    there_is_text_embedded = False
+    images_area = 0
+    for block in blocks:
+        # if this is a text block
+        if block[6] == 0:
+            # update there_is_text_embedded if text is not whitespaces
+            there_is_text_embedded = block[4].strip()
+        # if this is an image block
+        if block[6] == 1:
+            # add area of image to total area
+            block_height = block[3] - block[1]
+            block_width = block[2] - block[0]
+            images_area += block_height * block_width
+
+    images_are_majority = images_area < (0.5 * page_area)
+
+    is_generated_pdf = images_are_majority and there_is_text_embedded
+
+    generated_pdf_data = {
+        'blocks': [],
+        'width': 0
+    }
+
+    if is_generated_pdf:
+        raw_dict = page.getText('rawdict', 3)
+        generated_pdf_data['width'] = smallest_side
+        for block in raw_dict["blocks"]:
+            if "lines" in block:
+                for line in block["lines"]:
+                    if "spans" in line:
+                        myspan = []
+                        for span in line["spans"]:
+                            l_chars = span.get("chars")
+                            if l_chars is not None:
+                                if len(l_chars) > 1 or l_chars[0]["c"].strip():
+                                    myspan.append(span)
+                        if myspan:
+                            line["spans"] = myspan
+                            generated_pdf_data['blocks'].append(line)
+
     np_array = render_page(
+        smallest_side=smallest_side,
         fitz_page=page,
         width_output_file=width_output_file
     )
 
-    return ConvertedPage(np_array, dicts)
+    return ConvertedPage(np_array, generated_pdf_data)
