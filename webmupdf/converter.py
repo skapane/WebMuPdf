@@ -37,6 +37,8 @@ def get_pages(file_bin, file_type, width_output_file):
     for page_num in range(doc.pageCount):
         page = doc.loadPage(page_num)
         list_of_np_img.append(render_page(fitz_page=page, width_output_file=width_output_file))
+        smallest_side = min(page.CropBox.height, page.CropBox.width)
+        list_of_np_img.append(render_page(smallest_side=smallest_side, fitz_page=page, width_output_file=width_output_file))
     return list_of_np_img
 
 
@@ -79,26 +81,28 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     is_generated_pdf = images_are_majority and there_is_text_embedded
 
     generated_pdf_data = {
-        'blocks': [],
+        'words': [],
         'width': 0
     }
 
+    # Transform raw data extracted from the pdf into structured dict generated_pdf_data
     if is_generated_pdf:
-        raw_dict = page.getText('rawdict', 3)
+        words = page.getText('WORDS', 0)  # this 0 argument excludes whitespaces and extends ligatures
         generated_pdf_data['width'] = smallest_side
-        for block in raw_dict["blocks"]:
-            if "lines" in block:
-                for line in block["lines"]:
-                    if "spans" in line:
-                        myspan = []
-                        for span in line["spans"]:
-                            l_chars = span.get("chars")
-                            if l_chars is not None:
-                                if len(l_chars) > 1 or l_chars[0]["c"].strip():
-                                    myspan.append(span)
-                        if myspan:
-                            line["spans"] = myspan
-                            generated_pdf_data['blocks'].append(line)
+        generated_pdf_data['words'] = [
+            {
+                u"position": {
+                    u"left": word[0],
+                    u"top": word[1],
+                    u"width": word[2] - word[0],
+                    u"height": word[3] - word[1],
+                },
+                u"text": word[4],
+                u"block_num": word[5],
+                u"word_num": word[7],
+            }
+            for word in words
+        ]
 
     np_array = render_page(
         smallest_side=smallest_side,

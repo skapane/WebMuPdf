@@ -4,8 +4,8 @@ FOLDER_DATA = './share'
 
 setuptools.setup(
     name="webmupdf",
-    version="0.1.5",
-    author="Nathan Malnoury",
+    version="1.0.0",
+    author="Nathan Malnoury, Yassine Fikrat",
     description="A web service for PyMuPDF",
     long_description_content_type="text/markdown",
     url="https://github.com/skapane/WebMuPdf",
