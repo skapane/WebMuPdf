@@ -38,7 +38,11 @@ def get_pages(file_bin, file_type, width_output_file):
         page = doc.loadPage(page_num)
         list_of_np_img.append(render_page(fitz_page=page, width_output_file=width_output_file))
         smallest_side = min(page.CropBox.height, page.CropBox.width)
-        list_of_np_img.append(render_page(smallest_side=smallest_side, fitz_page=page, width_output_file=width_output_file))
+        list_of_np_img.append(render_page(
+            smallest_side=smallest_side,
+            fitz_page=page,
+            width_output_file=width_output_file
+        ))
     return list_of_np_img
 
 

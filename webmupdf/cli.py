@@ -1,11 +1,20 @@
 #! /usr/bin/python
 # encoding : utf-8
 import argparse
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import sys
 
 import webmupdf.converter as converter
-from webmupdf.kernel import ConvertedPage
+
+try:
+    sys_stdin = sys.stdin.buffer
+    sys_stdout = sys.stdout.buffer
+except AttributeError:
+    sys_stdin = sys.stdin
+    sys_stdout = sys.stdout
 
 if __name__ == '__main__':
 
@@ -18,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument("--output", help='Type of output to give', type=str, default="np_array",
                         choices=["np_array", "ConvertedPage"])
     args = parser.parse_args()
-    file_binary = sys.stdin.read()
+    file_binary = sys_stdin.read()
 
     if args.page_count:
         sys.stdout.write(str(converter.page_count(file_binary, filetype=args.type)))
@@ -33,12 +42,12 @@ if __name__ == '__main__':
         )
 
         if args.output == "ConvertedPage":
-            sys.stdout.write(pickle.dumps(
+            sys_stdout.write(pickle.dumps(
                 converted_page,
                 pickle.HIGHEST_PROTOCOL
             ))
         elif args.output == "np_array":
-            sys.stdout.write(pickle.dumps(
+            sys_stdout.write(pickle.dumps(
                 converted_page.np_render,
                 pickle.HIGHEST_PROTOCOL
             ))
