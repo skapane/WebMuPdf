@@ -105,6 +105,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
                 },
                 u"text": word[4],
                 u"block_num": word[5],
+                u"line_num": word[6],
                 u"word_num": word[7],
             }
             for word in words
