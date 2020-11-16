@@ -46,7 +46,7 @@ def get_pages(file_bin, file_type, width_output_file):
     return list_of_np_img
 
 
-def get_page(file_bin, page_num, file_type, width_output_file):
+def get_page(file_bin, page_num, file_type, width_output_file,threshold_pourcent_page_area):
     """
     :return: A converted page containing the render and text data
     """
@@ -82,7 +82,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
             block_width = block[2] - block[0]
             images_area += block_height * block_width
 
-    images_are_majority = images_area < (0.5 * page_area)
+    images_are_majority = images_area < (threshold_pourcent_page_area * page_area)
 
     is_generated_pdf = images_are_majority and there_is_text_embedded
 
