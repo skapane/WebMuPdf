@@ -62,7 +62,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     smallest_side = min(shape)
 
     # Get blocks with image bboxes only (no actual image is loaded)
-    blocks = page.getText('BLOCKS', 7)
+    blocks = page.getText('BLOCKS', flags=7)
 
     # Check if images represent a big portion of the page's area
     # Also check that there is text in the block level data
@@ -70,7 +70,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     images_area = 0
     for block in blocks:
         # if this is a text block
-        if block[6] == 0:
+        if block[6] == 0 and block[4].strip()!='':
             # update there_is_text_embedded if text is not whitespaces
             there_is_text_embedded = block[4].strip()
         # if this is an image block
