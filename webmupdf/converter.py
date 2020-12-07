@@ -94,7 +94,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     # Transform raw data extracted from the pdf into structured dict generated_pdf_data
     if is_generated_pdf:
         words = page.getText('WORDS', 0)  # this 0 argument excludes whitespaces and extends ligatures
-        generated_pdf_data['width'] = smallest_side
+        generated_pdf_data['width'] = page_width
         generated_pdf_data['words'] = [
             {
                 u"position": {
