@@ -73,7 +73,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
         if block[6] == 0:
             # update there_is_text_embedded if text is not whitespaces
             stripped_text = block[4].strip()
-            if stripepd_text != '':
+            if stripped_text != '':
                 there_is_text_embedded =stripped_text
         # if this is an image block
         if block[6] == 1:
