@@ -28,6 +28,8 @@ if __name__ == '__main__':
                         choices=["np_array", "ConvertedPage"])
     parser.add_argument("--threshold_page", help='Threshold (between 0 and 1) of the image pourcentage accepted',
                         type=float, default=0.5)
+    parser.add_argument("--get_line_num", help='Return line_num parameter in WebMuPDF',
+                        type=bool, default=False)
     args = parser.parse_args()
     file_binary = sys_stdin.read()
 
@@ -41,7 +43,8 @@ if __name__ == '__main__':
             file_type=args.type,
             page_num=args.page,
             width_output_file=args.width,
-            threshold_pourcent_page_area = args.threshold_page
+            threshold_pourcent_page_area = args.threshold_page,
+            get_line_num = args.get_line_num
         )
 
         if args.output == "ConvertedPage":
