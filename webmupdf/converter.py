@@ -45,8 +45,29 @@ def get_pages(file_bin, file_type, width_output_file):
         ))
     return list_of_np_img
 
+def extract_word_info(word, get_line_num):
+    """
+    extract info from word and put them into a dict
+    :param word:
+    :param get_line_num: do the dict will contain line_num
+    :return: a dict about pdf bloc
+    """
+    dict_to_return = {
+            u"position": {
+                u"left": word[0],
+                u"top": word[1],
+                u"width": word[2] - word[0],
+                u"height": word[3] - word[1],
+            },
+            u"text": word[4],
+            u"block_num": word[5],
+            u"word_num": word[7],
+        }
+    if get_line_num :
+        dict_to_return[u"line_num"] = word[6]
+    return dict_to_return
 
-def get_page(file_bin, page_num, file_type, width_output_file):
+def get_page(file_bin, page_num, file_type, width_output_file, threshold_pourcent_page_area, get_line_num):
     """
     :return: A converted page containing the render and text data
     """
@@ -82,7 +103,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
             block_width = block[2] - block[0]
             images_area += block_height * block_width
 
-    images_are_majority = images_area < (0.5 * page_area)
+    images_are_majority = images_area < (threshold_pourcent_page_area * page_area)
 
     is_generated_pdf = images_are_majority and there_is_text_embedded
 
@@ -96,17 +117,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
         words = page.getText('WORDS', 0)  # this 0 argument excludes whitespaces and extends ligatures
         generated_pdf_data['width'] = page_width
         generated_pdf_data['words'] = [
-            {
-                u"position": {
-                    u"left": word[0],
-                    u"top": word[1],
-                    u"width": word[2] - word[0],
-                    u"height": word[3] - word[1],
-                },
-                u"text": word[4],
-                u"block_num": word[5],
-                u"word_num": word[7],
-            }
+            extract_word_info(word,get_line_num)
             for word in words
         ]
 
