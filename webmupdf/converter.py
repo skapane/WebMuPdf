@@ -74,8 +74,6 @@ def get_page(file_bin, page_num, file_type, width_output_file):
             stripped_text = block[4].strip()
             if stripped_text != "":
                 there_is_text_embedded = True
-            if "�" in stripped_text:
-                return get_page_with_pdftoppm(file_bin, page_num, width_output_file)
         # if this is an image block
         if block[6] == 1:
             # add area of image to total area
@@ -110,6 +108,16 @@ def get_page(file_bin, page_num, file_type, width_output_file):
             }
             for word in words
         ]
+
+        # Exception for when doc is hopeless
+        if (
+                set([font_tuple[3] for font_tuple in doc.getPageFontList(page_num)]) == set(['TimesNewRomanPSMT', 'TimesNewRomanPS-BoldMT']) and
+                all(
+                    all(char == "�" for char in word["text"].strip())
+                    for word in generated_pdf_data['words']
+                )
+        ):
+            return get_page_with_pdftoppm(file_bin, page_num, width_output_file)
 
     np_array = render_page(
         smallest_side=smallest_side,
