@@ -1,10 +1,11 @@
 #!/usr/bin/python
 # encoding : utf-8
-import PIL.Image as pilimage
+import PIL.Image as Image
 import fitz
 import numpy as np
-
+import subprocess
 from webmupdf.kernel import ConvertedPage
+from io import BytesIO
 
 SUPPORTED_FORMAT = ['pdf', 'xps', 'oxps', 'epub', 'cbz', 'fb2', 'jpeg', 'bmp', 'jxr', 'jpx', 'gif', 'tiff', 'png',
                     'pnm', 'pgm', 'pbm', 'ppm', 'pam', 'tga', ]
@@ -19,7 +20,7 @@ def render_page(smallest_side, fitz_page, width_output_file):
 
     pm = fitz_page.getPixmap(alpha=False, matrix=fitz.Matrix(zoom_ratio, zoom_ratio))
     shape = tuple([int(s) for s in pm.irect[-2:]])
-    page_as_pil = pilimage.frombytes(mode='RGB', data=pm.samples, size=shape)
+    page_as_pil = Image.frombytes(mode='RGB', data=pm.samples, size=shape)
     return np.array(page_as_pil)
 
 
@@ -36,7 +37,6 @@ def get_pages(file_bin, file_type, width_output_file):
     list_of_np_img = []
     for page_num in range(doc.pageCount):
         page = doc.loadPage(page_num)
-        list_of_np_img.append(render_page(fitz_page=page, width_output_file=width_output_file))
         smallest_side = min(page.CropBox.height, page.CropBox.width)
         list_of_np_img.append(render_page(
             smallest_side=smallest_side,
@@ -70,10 +70,10 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     for block in blocks:
         # if this is a text block
         if block[6] == 0:
-            # update there_is_text_embedded if text is not whitespaces
+            # update there_is_text_embedded if text is not whitespaces or weird question mark �
             stripped_text = block[4].strip()
-            if stripped_text != '':
-                there_is_text_embedded =stripped_text
+            if stripped_text != "":
+                there_is_text_embedded = True
         # if this is an image block
         if block[6] == 1:
             # add area of image to total area
@@ -109,6 +109,16 @@ def get_page(file_bin, page_num, file_type, width_output_file):
             for word in words
         ]
 
+        # Exception for when doc is hopeless
+        if (
+                set([font_tuple[3] for font_tuple in doc.getPageFontList(page_num)]) == set(['TimesNewRomanPSMT', 'TimesNewRomanPS-BoldMT']) and
+                all(
+                    all(char == "�" for char in word["text"].strip())
+                    for word in generated_pdf_data['words']
+                )
+        ):
+            return get_page_with_pdftoppm(file_bin, page_num, width_output_file)
+
     np_array = render_page(
         smallest_side=smallest_side,
         fitz_page=page,
@@ -116,3 +126,25 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     )
 
     return ConvertedPage(np_array, generated_pdf_data)
+
+
+def get_page_with_pdftoppm(file_bin, page_num, target_width):
+    process = subprocess.Popen(
+        [
+            "pdftoppm",
+            "-f",
+            str(page_num),
+            "-l",
+            str(page_num),
+            "-png",
+            "-r",
+            "300",
+            "-scale-to-x",
+            str(target_width),
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    out, err = process.communicate(file_bin)
+    image = Image.open(BytesIO(out))
+    return ConvertedPage(np.array(image), {"words": [], "width": 0})
