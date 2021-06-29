@@ -11,7 +11,7 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         "numpy==1.16.2",
-        "pillow==5.3.0",
+        "pillow==7.1.2",
         "pymupdf~=1.16.10",
     ],
     classifiers=[
