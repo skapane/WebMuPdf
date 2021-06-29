@@ -146,5 +146,5 @@ def get_page_with_pdftoppm(file_bin, page_num, target_width):
         stdout=subprocess.PIPE,
     )
     out, err = process.communicate(file_bin)
-    image = Image.open(BytesIO(out))
-    return ConvertedPage(np.array(image), {"words": [], "width": 0})
+    with Image.open(BytesIO(out)) as image:
+        return ConvertedPage(np.array(image), {"words": [], "width": 0})
