@@ -76,8 +76,6 @@ def get_page(file_bin, page_num, file_type, width_output_file, password):
     page_width = page.MediaBoxSize.x
     page_area = page_height * page_width
 
-    smallest_side = min(page_height, page_width)
-
     # Get blocks with image bboxes only (no actual image is loaded)
     blocks = page.getText('BLOCKS', flags=7)
 
