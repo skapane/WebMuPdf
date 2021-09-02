@@ -10,7 +10,7 @@ setuptools.setup(
     packages=['webmupdf'],
     include_package_data=True,
     install_requires=[
-        "numpy==1.16.2",
+        "numpy==1.20.3",
         "pillow==7.1.2",
         "pymupdf~=1.16.10",
     ],
