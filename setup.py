@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="webmupdf",
-    version="2.1.2",
+    version="2.1.3-SNAPSHOT",
     author="Nathan Malnoury, Yassine Fikrat, Renaud Loiseleux",
     description="A web service for PyMuPDF",
     long_description_content_type="text/markdown",
