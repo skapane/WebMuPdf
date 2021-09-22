@@ -66,14 +66,20 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     # Check if images represent a big portion of the page's area
     # Also check that there is text in the block level data
     there_is_text_embedded = False
+    text = ""
     images_area = 0
+    text_area = 0
     for block in blocks:
         # if this is a text block
         if block[6] == 0:
             # update there_is_text_embedded if text is not whitespaces or weird question mark �
             stripped_text = block[4].strip()
             if stripped_text != "":
+                text += stripped_text
                 there_is_text_embedded = True
+                block_height = block[3] - block[1]
+                block_width = block[2] - block[0]
+                text_area += block_height * block_width
         # if this is an image block
         if block[6] == 1:
             # add area of image to total area
@@ -81,9 +87,23 @@ def get_page(file_bin, page_num, file_type, width_output_file):
             block_width = block[2] - block[0]
             images_area += block_height * block_width
 
-    images_are_majority = images_area < (0.5 * page_area)
+    images_are_minority = images_area < (0.5 * page_area)
 
-    is_generated_pdf = images_are_majority and there_is_text_embedded
+    # test for weird random text
+    spec_rate = 0.0
+    if there_is_text_embedded:
+        spec_chars_count = 0
+        for char in text:
+            if not char.isalnum():
+                spec_chars_count += 1
+        spec_rate = spec_chars_count / len(text)
+
+    use_generated_pdf = (
+            images_are_minority
+            and there_is_text_embedded
+            and spec_rate < 0.5
+            and text_area > images_area
+    )
 
     generated_pdf_data = {
         'words': [],
@@ -91,7 +111,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     }
 
     # Transform raw data extracted from the pdf into structured dict generated_pdf_data
-    if is_generated_pdf:
+    if use_generated_pdf:
         words = page.getText('WORDS', 0)  # this 0 argument excludes whitespaces and extends ligatures
         generated_pdf_data['width'] = page_width
         generated_pdf_data['words'] = [
