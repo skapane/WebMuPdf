@@ -69,6 +69,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     text = ""
     images_area = 0
     text_area = 0
+    images_position = []
     for block in blocks:
         # if this is a text block
         if block[6] == 0:
@@ -86,17 +87,19 @@ def get_page(file_bin, page_num, file_type, width_output_file):
             block_height = block[3] - block[1]
             block_width = block[2] - block[0]
             images_area += block_height * block_width
+            images_position.append({
+                u"left": block[0],
+                u"top": block[1],
+                u"width": block_width,
+                u"height": block_height,
+            })
 
     images_are_minority = images_area < (0.5 * page_area)
 
     # test for weird random text
     spec_rate = 0.0
     if there_is_text_embedded:
-        spec_chars_count = 0
-        for char in text:
-            if not char.isalnum():
-                spec_chars_count += 1
-        spec_rate = spec_chars_count / len(text)
+        spec_rate = len([c for c in text if not c.isalnum()]) / len(text)
 
     use_generated_pdf = (
             images_are_minority
@@ -107,7 +110,8 @@ def get_page(file_bin, page_num, file_type, width_output_file):
 
     generated_pdf_data = {
         'words': [],
-        'width': 0
+        'width': 0,
+        'images': images_position,
     }
 
     # Transform raw data extracted from the pdf into structured dict generated_pdf_data
