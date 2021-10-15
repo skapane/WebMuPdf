@@ -51,11 +51,13 @@ def get_pages(file_bin, file_type, width_output_file):
     return list_of_np_img
 
 
-def get_page(file_bin, page_num, file_type, width_output_file):
+def get_page(file_bin, page_num, file_type, width_output_file, password):
     """
     :return: A converted page containing the render and text data
     """
     doc = fitz.Document(stream=file_bin, filetype=file_type)
+    if doc.isEncrypted and password is not None:
+        doc.authenticate(password)
     page = doc.loadPage(page_num)
 
     # Use page object to get page height and width

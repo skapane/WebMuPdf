@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser.add_argument("--page-count", help='count number of pages in a document', action='store_true', default=False)
     parser.add_argument("--output", help='Type of output to give', type=str, default="np_array",
                         choices=["np_array", "ConvertedPage"])
+    parser.add_argument("--password", help='Password if file is encrypted', default=None)
     args = parser.parse_args()
     file_binary = sys_stdin.read()
 
@@ -38,7 +39,8 @@ if __name__ == '__main__':
             file_bin=file_binary,
             file_type=args.type,
             page_num=args.page,
-            width_output_file=args.width
+            width_output_file=args.width,
+            password=args.password
         )
 
         if args.output == "ConvertedPage":
