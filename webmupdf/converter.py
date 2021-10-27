@@ -15,13 +15,29 @@ def page_count(fitz_doc, filetype):
     return fitz.Document(stream=fitz_doc, filetype=filetype).pageCount
 
 
-def render_page(smallest_side, fitz_page, width_output_file):
-    zoom_ratio = width_output_file / smallest_side if width_output_file else 2048 / smallest_side
+def render_page(page_height, page_width, fitz_page, width_output_file):
+    # type: (int, int, fitz.fitz.Page, int) -> np.array
+    """
+    Takes a fitz.Page from a fitz.Document and translates it into a numpy array.
 
-    pm = fitz_page.getPixmap(alpha=False, matrix=fitz.Matrix(zoom_ratio, zoom_ratio))
-    shape = tuple([int(s) for s in pm.irect[-2:]])
-    page_as_pil = Image.frombytes(mode='RGB', data=pm.samples, size=shape)
-    return np.array(page_as_pil)
+    :param page_height: an int representing the height of the page.
+    :param page_width: an int representing the width of the page.
+    :param fitz_page: an instance of fitz.Page representing the page to be processed.
+    :param width_output_file: an int representing desired width of output file.
+    :return: a numpy array representation of the page.
+    """
+
+    output_width = width_output_file if width_output_file else 2048
+
+    if 1.0 * max(page_height, page_width) / min(page_height, page_width) < 16:
+        zoom_ratio = output_width / min(page_height, page_width)
+        pm = fitz_page.getPixmap(alpha=False, matrix=fitz.Matrix(zoom_ratio, zoom_ratio))
+        shape = tuple([int(s) for s in pm.irect[-2:]])
+        page_as_pil = Image.frombytes(mode='RGB', data=pm.samples, size=shape)
+
+        return np.array(page_as_pil)
+
+    return np.full((output_width, output_width, 3), 128, dtype='uint8')
 
 
 def get_pages(file_bin, file_type, width_output_file):
@@ -37,9 +53,9 @@ def get_pages(file_bin, file_type, width_output_file):
     list_of_np_img = []
     for page_num in range(doc.pageCount):
         page = doc.loadPage(page_num)
-        smallest_side = min(page.CropBox.height, page.CropBox.width)
         list_of_np_img.append(render_page(
-            smallest_side=smallest_side,
+            page_height=page.CropBox.height,
+            page_width=page.CropBox.width,
             fitz_page=page,
             width_output_file=width_output_file
         ))
@@ -59,8 +75,6 @@ def get_page(file_bin, page_num, file_type, width_output_file, password):
     page_height = page.MediaBoxSize.y
     page_width = page.MediaBoxSize.x
     page_area = page_height * page_width
-
-    smallest_side = min(page_height, page_width)
 
     # Get blocks with image bboxes only (no actual image is loaded)
     blocks = page.getText('BLOCKS', flags=7)
@@ -146,7 +160,8 @@ def get_page(file_bin, page_num, file_type, width_output_file, password):
             return get_page_with_pdftoppm(file_bin, page_num, width_output_file)
 
     np_array = render_page(
-        smallest_side=smallest_side,
+        page_height=page_height,
+        page_width=page_width,
         fitz_page=page,
         width_output_file=width_output_file
     )
