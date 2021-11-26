@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # encoding : utf-8
+import sys
+from contextlib import redirect_stdout
 
 import fitz
 import numpy as np
@@ -123,22 +125,44 @@ def get_page(file_bin, page_num, file_type, width_output_file):
         words = page.getText('WORDS', 0)  # this 0 argument excludes whitespaces and extends ligatures
         directions = get_word_orientation(page)
         generated_pdf_data['width'] = page_width
-        generated_pdf_data['words'] = [
-            {
-                u"position": {
-                    u"left": word[0],
-                    u"top": word[1],
-                    u"width": word[2] - word[0],
-                    u"height": word[3] - word[1],
-                },
-                u"text": word[4],
-                u"block_num": word[5],
-                u"word_num": word[7],
-                u"orientation": direction[1]
-            }
-            for word, direction in zip(words, directions)
-            if word[4] == direction[0]
-        ]
+
+        if len(words) != len(directions):
+            with redirect_stdout(sys.stderr):
+                print(f"Error encountered: length of 'words' and length of 'directions'"
+                      f" are not equal, {len(words)} vs. {len(directions)}")
+
+            generated_pdf_data['words'] = [
+                {
+                    u"position": {
+                        u"left": word[0],
+                        u"top": word[1],
+                        u"width": word[2] - word[0],
+                        u"height": word[3] - word[1],
+                    },
+                    u"text": word[4],
+                    u"block_num": word[5],
+                    u"word_num": word[7],
+                    u"orientation": 0
+                }
+                for word in words
+            ]
+        else:
+            generated_pdf_data['words'] = [
+                {
+                    u"position": {
+                        u"left": word[0],
+                        u"top": word[1],
+                        u"width": word[2] - word[0],
+                        u"height": word[3] - word[1],
+                    },
+                    u"text": word[4],
+                    u"block_num": word[5],
+                    u"word_num": word[7],
+                    u"orientation": direction[1]
+                }
+                for word, direction in zip(words, directions)
+                if word[4] == direction[0]
+            ]
 
         # Exception for when doc is hopeless
         if (
