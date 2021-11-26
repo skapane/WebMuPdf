@@ -126,26 +126,18 @@ def get_page(file_bin, page_num, file_type, width_output_file):
         directions = get_word_orientation(page)
         generated_pdf_data['width'] = page_width
 
-        if len(words) != len(directions):
+        index = 0
+        directions_ = []
+        for word in words:
+            len_word = len(word[4])
+            if index + len_word <= len(directions):
+                directions_.append(directions[index])
+                index = index + len_word
+
+        if len(words) != len(directions_):
             with redirect_stdout(sys.stderr):
                 print(f"Error encountered: length of 'words' and length of 'directions'"
-                      f" are not equal, {len(words)} vs. {len(directions)}")
-
-            generated_pdf_data['words'] = [
-                {
-                    u"position": {
-                        u"left": word[0],
-                        u"top": word[1],
-                        u"width": word[2] - word[0],
-                        u"height": word[3] - word[1],
-                    },
-                    u"text": word[4],
-                    u"block_num": word[5],
-                    u"word_num": word[7],
-                    u"orientation": 0
-                }
-                for word in words
-            ]
+                      f" are not equal, {len(words)} vs. {len(directions_)}")
         else:
             generated_pdf_data['words'] = [
                 {
@@ -158,10 +150,9 @@ def get_page(file_bin, page_num, file_type, width_output_file):
                     u"text": word[4],
                     u"block_num": word[5],
                     u"word_num": word[7],
-                    u"orientation": direction[1]
+                    u"orientation": direction
                 }
-                for word, direction in zip(words, directions)
-                if word[4] == direction[0]
+                for word, direction in zip(words, directions_)
             ]
 
         # Exception for when doc is hopeless
@@ -206,7 +197,7 @@ def get_page_with_pdftoppm(file_bin, page_num, target_width):
 
 
 def get_word_orientation(page):
-    # type: (fitz.fitz.Document.loadPage) -> List[Tuple[str, int]]
+    # type: (fitz.fitz.Document.loadPage) -> List[int]
     """
     Get the orientation of each individual word.
 
@@ -214,23 +205,20 @@ def get_word_orientation(page):
     :return: a list of tuples each containing the word and its orientation in the page (0: horizontal, 1: vertical).
     """
 
-    text_dict = page.getText('DICT', 0)
+    text_dict = page.getText('DICT')
 
     result = []
-
     for block in text_dict["blocks"]:
         if "lines" in block.keys():
             for line in block["lines"]:
                 if isinstance(line, list):
                     for individual_line in line:
                         for span in individual_line["spans"]:
-                            for text in span["text"].split():
-                                direction = 1 if individual_line["dir"] == (0.0, 1.0) else 0  # 1 vertical, 0 horizontal
-                                result.append((text, direction))
+                            direction = 1 if individual_line["dir"] == (0.0, 1.0) else 0
+                            result += [direction] * len(span["text"].replace(" ", ""))
                 else:
                     for span in line["spans"]:
-                        for text in span["text"].split():
-                            direction = 1 if line["dir"] == (0.0, 1.0) else 0
-                            result.append((text, direction))
+                        direction = 1 if line["dir"] == (0.0, 1.0) else 0
+                        result += [direction] * len(span["text"].replace(" ", ""))
 
     return result
