@@ -1,11 +1,15 @@
 #!/usr/bin/python
 # encoding : utf-8
-import PIL.Image as Image
+
 import fitz
 import numpy as np
+import PIL.Image as Image
 import subprocess
-from webmupdf.kernel import ConvertedPage
+
 from io import BytesIO
+from typing import List, Tuple
+
+from webmupdf.kernel import ConvertedPage
 
 SUPPORTED_FORMAT = ['pdf', 'xps', 'oxps', 'epub', 'cbz', 'fb2', 'jpeg', 'bmp', 'jxr', 'jpx', 'gif', 'tiff', 'png',
                     'pnm', 'pgm', 'pbm', 'ppm', 'pam', 'tga', ]
@@ -117,6 +121,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     # Transform raw data extracted from the pdf into structured dict generated_pdf_data
     if use_generated_pdf:
         words = page.getText('WORDS', 0)  # this 0 argument excludes whitespaces and extends ligatures
+        directions = get_word_orientation(page)
         generated_pdf_data['width'] = page_width
         generated_pdf_data['words'] = [
             {
@@ -129,8 +134,10 @@ def get_page(file_bin, page_num, file_type, width_output_file):
                 u"text": word[4],
                 u"block_num": word[5],
                 u"word_num": word[7],
+                u"orientation": direction[1]
             }
-            for word in words
+            for word, direction in zip(words, directions)
+            if word[4] == direction[0]
         ]
 
         # Exception for when doc is hopeless
@@ -172,3 +179,34 @@ def get_page_with_pdftoppm(file_bin, page_num, target_width):
     out, err = process.communicate(file_bin)
     with Image.open(BytesIO(out)) as image:
         return ConvertedPage(np.array(image), {"words": [], "width": 0})
+
+
+def get_word_orientation(page):
+    # type: (fitz.fitz.Document.loadPage) -> List[Tuple[str, int]]
+    """
+    Get the orientation of each individual word.
+
+    :param page: a Page element loaded to a fitz.Document.
+    :return: a list of tuples each containing the word and its orientation in the page (0: horizontal, 1: vertical).
+    """
+
+    text_dict = page.getText('DICT', 0)
+
+    result = []
+
+    for block in text_dict["blocks"]:
+        if "lines" in block.keys():
+            for line in block["lines"]:
+                if isinstance(line, list):
+                    for individual_line in line:
+                        for span in individual_line["spans"]:
+                            for text in span["text"].split():
+                                direction = 1 if individual_line["dir"] == (0.0, 1.0) else 0  # 1 vertical, 0 horizontal
+                                result.append((text, direction))
+                else:
+                    for span in line["spans"]:
+                        for text in span["text"].split():
+                            direction = 1 if line["dir"] == (0.0, 1.0) else 0
+                            result.append((text, direction))
+
+    return result
