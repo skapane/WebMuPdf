@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # encoding : utf-8
 import sys
-from contextlib import redirect_stdout
 
 import fitz
 import numpy as np
@@ -9,7 +8,7 @@ import PIL.Image as Image
 import subprocess
 
 from io import BytesIO
-from typing import List, Tuple
+from typing import List
 
 from webmupdf.kernel import ConvertedPage
 
@@ -127,38 +126,40 @@ def get_page(file_bin, page_num, file_type, width_output_file):
         generated_pdf_data['width'] = page_width
 
         index = 0
-        directions_ = []
+        orientations = []
+
         for word in words:
             len_word = len(word[4])
             if index + len_word <= len(directions):
-                directions_.append(directions[index])
+                orientations.append(directions[index])
                 index = index + len_word
 
-        if len(words) != len(directions_):
-            with redirect_stdout(sys.stderr):
-                print(f"Error encountered: length of 'words' and length of 'directions'"
-                      f" are not equal, {len(words)} vs. {len(directions_)}")
-        else:
-            generated_pdf_data['words'] = [
-                {
-                    u"position": {
-                        u"left": word[0],
-                        u"top": word[1],
-                        u"width": word[2] - word[0],
-                        u"height": word[3] - word[1],
-                    },
-                    u"text": word[4],
-                    u"block_num": word[5],
-                    u"word_num": word[7],
-                    u"orientation": direction
-                }
-                for word, direction in zip(words, directions_)
-            ]
+        if len(words) != len(orientations):
+            print('ERROR: "words" and "directions" are not of same length.', file=sys.stderr)
+            orientations = [0] * len(words)
+
+        generated_pdf_data['words'] = [
+            {
+                u"position": {
+                    u"left": word[0],
+                    u"top": word[1],
+                    u"width": word[2] - word[0],
+                    u"height": word[3] - word[1],
+                },
+                u"text": word[4],
+                u"block_num": word[5],
+                u"word_num": word[7],
+                u"orientation": orientations[index]
+            }
+            for index, word in enumerate(words)
+        ]
 
         # Exception for when doc is hopeless
         if (
-                set([font_tuple[3] for font_tuple in doc.getPageFontList(page_num)]) == set(['TimesNewRomanPSMT', 'TimesNewRomanPS-BoldMT']) and
-                all(
+                set(
+                    [font_tuple[3] for font_tuple in doc.getPageFontList(page_num)]
+                ) == {'TimesNewRomanPSMT', 'TimesNewRomanPS-BoldMT'}
+                and all(
                     all(char == "�" for char in word["text"].strip())
                     for word in generated_pdf_data['words']
                 )
