@@ -130,13 +130,12 @@ def get_page(file_bin, page_num, file_type, width_output_file):
 
         for word in words:
             len_word = len(word[4])
-            if index + len_word <= len(directions):
+            try:
                 orientations.append(directions[index])
                 index = index + len_word
-
-        if len(words) != len(orientations):
-            print('ERROR: "words" and "directions" are not of same length.', file=sys.stderr)
-            orientations = [0] * len(words)
+            except IndexError:
+                print('ERROR: "words" and "directions" are not of same length.', file=sys.stderr)
+                orientations = [0] * len(words)
 
         generated_pdf_data['words'] = [
             {
