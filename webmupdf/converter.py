@@ -140,6 +140,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
 
         if index != len(directions):
             print('ERROR: The length of "directions" is longer than the length of "words".', file=sys.stderr)
+            orientations = [0] * len(words)
 
         generated_pdf_data['words'] = [
             {
