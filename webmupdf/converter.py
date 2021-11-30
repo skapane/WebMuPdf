@@ -122,7 +122,7 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     # Transform raw data extracted from the pdf into structured dict generated_pdf_data
     if use_generated_pdf:
         words = page.getText('WORDS', 0)  # this 0 argument excludes whitespaces and extends ligatures
-        directions = get_word_orientation(page)
+        directions = get_letter_orientation(page)
         generated_pdf_data['width'] = page_width
 
         index = 0
@@ -197,13 +197,13 @@ def get_page_with_pdftoppm(file_bin, page_num, target_width):
         return ConvertedPage(np.array(image), {"words": [], "width": 0})
 
 
-def get_word_orientation(page):
+def get_letter_orientation(page):
     # type: (fitz.fitz.Document.loadPage) -> List[int]
     """
-    Get the orientation of each individual word.
+    Get the orientation of each individual letter.
 
     :param page: a Page element loaded to a fitz.Document.
-    :return: a list of tuples each containing the word and its orientation in the page (0: horizontal, 1: vertical).
+    :return: a list of tuples each containing the letter and its orientation in the page (0: horizontal, 1: vertical).
     """
 
     text_dict = page.getText('DICT')
