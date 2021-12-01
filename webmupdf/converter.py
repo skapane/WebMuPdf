@@ -8,7 +8,7 @@ import PIL.Image as Image
 import subprocess
 
 from io import BytesIO
-from typing import List
+from typing import List, Tuple
 
 from webmupdf.kernel import ConvertedPage
 
@@ -210,6 +210,25 @@ def get_letter_orientation(page):
     :return: a list of tuples each containing the letter and its orientation in the page (0: horizontal, 1: vertical).
     """
 
+    def determine_direction(line_direction):
+        # type: (Tuple[float, float]) -> int
+        """
+        Determines the direction of each line extracted from the generated pdf.
+
+        :param line_direction: the direction of the line as provided by line["dir"].
+        :return: an int indicating its direction: 0 for horizontal (default), 1 for vertical and 2 for diagonal.
+        """
+
+        direction_ = 0  # horizontal text by default
+
+        if line_direction and isinstance(line_direction[0], float) and isinstance(line_direction[1], float):
+            if line_direction in [(0.0, 1.0), (0.0, -1.0)]:
+                direction_ = 1  # vertical text
+            elif line_direction != (1.0, 0.0):
+                direction_ = 2  # diagonal text
+
+        return direction_
+
     text_dict = page.getText('DICT')
 
     result = []
@@ -219,11 +238,11 @@ def get_letter_orientation(page):
                 if isinstance(line, list):
                     for individual_line in line:
                         for span in individual_line["spans"]:
-                            direction = 1 if individual_line["dir"] == (0.0, 1.0) else 0
+                            direction = determine_direction(individual_line["dir"])
                             result += [direction] * len(span["text"].replace(" ", ""))
                 else:
                     for span in line["spans"]:
-                        direction = 1 if line["dir"] == (0.0, 1.0) else 0
+                        direction = determine_direction(line["dir"])
                         result += [direction] * len(span["text"].replace(" ", ""))
 
     return result
