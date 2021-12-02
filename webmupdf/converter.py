@@ -1,11 +1,16 @@
 #!/usr/bin/python
 # encoding : utf-8
-import PIL.Image as Image
+import sys
+
 import fitz
 import numpy as np
+import PIL.Image as Image
 import subprocess
-from webmupdf.kernel import ConvertedPage
+
 from io import BytesIO
+from typing import List, Tuple
+
+from webmupdf.kernel import ConvertedPage
 
 SUPPORTED_FORMAT = ['pdf', 'xps', 'oxps', 'epub', 'cbz', 'fb2', 'jpeg', 'bmp', 'jxr', 'jpx', 'gif', 'tiff', 'png',
                     'pnm', 'pgm', 'pbm', 'ppm', 'pam', 'tga', ]
@@ -117,7 +122,26 @@ def get_page(file_bin, page_num, file_type, width_output_file):
     # Transform raw data extracted from the pdf into structured dict generated_pdf_data
     if use_generated_pdf:
         words = page.getText('WORDS', 0)  # this 0 argument excludes whitespaces and extends ligatures
+        directions = get_letter_orientation(page)
         generated_pdf_data['width'] = page_width
+
+        index = 0
+        orientations = []
+
+        for word in words:
+            len_word = len(word[4])
+            try:
+                orientations.append(directions[index])
+                index = index + len_word
+            except IndexError:
+                print('ERROR: The length of "words" is longer than the length of "directions".', file=sys.stderr)
+                orientations = [0] * len(words)
+                break
+
+        if index != len(directions):
+            print('ERROR: The length of "directions" is longer than the length of "words".', file=sys.stderr)
+            orientations = [0] * len(words)
+
         generated_pdf_data['words'] = [
             {
                 u"position": {
@@ -129,14 +153,17 @@ def get_page(file_bin, page_num, file_type, width_output_file):
                 u"text": word[4],
                 u"block_num": word[5],
                 u"word_num": word[7],
+                u"orientation": orientations[index]
             }
-            for word in words
+            for index, word in enumerate(words)
         ]
 
         # Exception for when doc is hopeless
         if (
-                set([font_tuple[3] for font_tuple in doc.getPageFontList(page_num)]) == set(['TimesNewRomanPSMT', 'TimesNewRomanPS-BoldMT']) and
-                all(
+                set(
+                    [font_tuple[3] for font_tuple in doc.getPageFontList(page_num)]
+                ) == {'TimesNewRomanPSMT', 'TimesNewRomanPS-BoldMT'}
+                and all(
                     all(char == "�" for char in word["text"].strip())
                     for word in generated_pdf_data['words']
                 )
@@ -172,3 +199,50 @@ def get_page_with_pdftoppm(file_bin, page_num, target_width):
     out, err = process.communicate(file_bin)
     with Image.open(BytesIO(out)) as image:
         return ConvertedPage(np.array(image), {"words": [], "width": 0})
+
+
+def get_letter_orientation(page):
+    # type: (fitz.fitz.Document.loadPage) -> List[int]
+    """
+    Get the orientation of each individual letter.
+
+    :param page: a Page element loaded to a fitz.Document.
+    :return: a list of tuples each containing the letter and its orientation in the page (0: horizontal, 1: vertical).
+    """
+
+    def determine_direction(line_direction):
+        # type: (Tuple[float, float]) -> int
+        """
+        Determines the direction of each line extracted from the generated pdf.
+
+        :param line_direction: the direction of the line as provided by line["dir"].
+        :return: an int indicating its direction: 0 for horizontal (default), 1 for vertical and 2 for diagonal.
+        """
+
+        direction_ = 0  # horizontal text by default
+
+        if line_direction and isinstance(line_direction[0], float) and isinstance(line_direction[1], float):
+            if line_direction in [(0.0, 1.0), (0.0, -1.0)]:
+                direction_ = 1  # vertical text
+            elif line_direction != (1.0, 0.0):
+                direction_ = 2  # diagonal text
+
+        return direction_
+
+    text_dict = page.getText('DICT')
+
+    result = []
+    for block in text_dict["blocks"]:
+        if "lines" in block.keys():
+            for line in block["lines"]:
+                if isinstance(line, list):
+                    for individual_line in line:
+                        for span in individual_line["spans"]:
+                            direction = determine_direction(individual_line["dir"])
+                            result += [direction] * len(span["text"].replace(" ", ""))
+                else:
+                    for span in line["spans"]:
+                        direction = determine_direction(line["dir"])
+                        result += [direction] * len(span["text"].replace(" ", ""))
+
+    return result
