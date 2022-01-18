@@ -145,7 +145,7 @@ def get_page(file_bin, page_num, file_type, width_output_file, password):
         orientations = []
 
         for word in words:
-            len_word = len(word[4])
+            len_word = len(word[4].replace('\u200b', '').replace(" ", ""))
             try:
                 orientations.append(directions[index])
                 index = index + len_word
@@ -255,11 +255,15 @@ def get_letter_orientation(page):
                 if isinstance(line, list):
                     for individual_line in line:
                         for span in individual_line["spans"]:
-                            direction = determine_direction(individual_line["dir"])
-                            result += [direction] * len(span["text"].replace(" ", ""))
+                            text = span["text"].strip().replace('\u200b', '').replace(" ", "")
+                            if text:
+                                direction = determine_direction(individual_line["dir"])
+                                result += [direction] * len(text)
                 else:
                     for span in line["spans"]:
-                        direction = determine_direction(line["dir"])
-                        result += [direction] * len(span["text"].replace(" ", ""))
+                        text = span["text"].strip().replace('\u200b', '').replace(" ", "")
+                        if text:
+                            direction = determine_direction(line["dir"])
+                            result += [direction] * len(text)
 
     return result
