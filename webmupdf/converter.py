@@ -145,7 +145,7 @@ def get_page(file_bin, page_num, file_type, width_output_file, password):
         orientations = []
 
         for word in words:
-            len_word = len(word[4].replace('\u200b', '').replace(" ", ""))
+            len_word = len(text_cleaner(word[4]))
             try:
                 orientations.append(directions[index])
                 index = index + len_word
@@ -218,6 +218,18 @@ def get_page_with_pdftoppm(file_bin, page_num, target_width):
         return ConvertedPage(np.array(image), {"words": [], "width": 0})
 
 
+def text_cleaner(text_to_clean):
+    # type: (str) -> str
+    """
+    Cleans text: removes trailing spaces, replaces '\u200b' and ' ' by an empty string.
+
+    :param text_to_clean: a string to clean.
+    :return: the cleaned string.
+    """
+
+    return text_to_clean.strip().replace('\u200b', '').replace(" ", "")
+
+
 def get_letter_orientation(page):
     # type: (fitz.fitz.Document.loadPage) -> List[int]
     """
@@ -245,17 +257,6 @@ def get_letter_orientation(page):
                 direction_ = 2  # diagonal text
 
         return direction_
-
-    def text_cleaner(text_to_clean):
-        # type: (str) -> str
-        """
-        Cleans text: removes trailing spaces, replaces '\u200b' and ' ' by an empty string.
-
-        :param text_to_clean: a string to clean.
-        :return: the cleaned string.
-        """
-
-        return text_to_clean.strip().replace('\u200b', '').replace(" ", "")
 
     text_dict = page.getText('DICT')
 
